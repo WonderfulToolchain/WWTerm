@@ -9,63 +9,97 @@
 #include "screen.h"
 #include "escape.h"
 #include "esclib.h"
+#include "log.h"
+
+void push_function_key(int ch)
+{
+  char * s;
+  s = get_function_key(KEY_F1 - ch);
+  if (com_is_connected) {
+    com_puts(s);
+  } else {
+    print_string(s);
+  }
+}
 
 int key_X1234_action(int key)
 {
-  clear_keycursol();
-
-  if (key & KEY_X1) keyboard_cursol_y--;
-  if (key & KEY_X2) keyboard_cursol_x++;
-  if (key & KEY_X3) keyboard_cursol_y++;
-  if (key & KEY_X4) keyboard_cursol_x--;
-  keyboard_cursol_x =
-    (keyboard_cursol_x + KEYBOARD_WIDTH ) % KEYBOARD_WIDTH;
-  keyboard_cursol_y =
-    (keyboard_cursol_y + KEYBOARD_HEIGHT) % KEYBOARD_HEIGHT;
-  
-  print_keycursol();
-
+  wonx_lcddraw_level_down();
+  if (key & KEY_X1) keycursor_up();
+  if (key & KEY_X2) keycursor_right();
+  if (key & KEY_X3) keycursor_down();
+  if (key & KEY_X4) keycursor_left();
+  wonx_lcddraw_level_up();
   return (0);
 }
 
 int key_Y1234_action(int key)
 {
-  if (key & KEY_Y1) { /* Up */
+  int k = 0;
+
+  if (key & KEY_Y1) { k = keyboard_get_y1234map(0); } /* Up */
+  if (key & KEY_Y2) { k = keyboard_get_y1234map(1); } /* Right */
+  if (key & KEY_Y3) { k = keyboard_get_y1234map(2); } /* Down */
+  if (key & KEY_Y4) { k = keyboard_get_y1234map(3); } /* Left */
+
+  switch (k) {
+  case KEY_CURSOR_UP: /* Up */
     if (com_is_connected) {
-      comm_send_char(ESCAPE_CODE);
-      comm_send_char(cursol_send_mode ? 'O' : '[');
-      comm_send_char('A');
+      com_putc(ESCAPE_CODE);
+      com_putc(cursor_send_mode ? 'O' : '[');
+      com_putc('A');
     } else {
-      cursol_up(1);
+      cursor_up(1);
     }
-  }
-  if (key & KEY_Y3) { /* Down */
+    break;
+  case KEY_CURSOR_RIGHT: /* Right */
     if (com_is_connected) {
-      comm_send_char(ESCAPE_CODE);
-      comm_send_char(cursol_send_mode ? 'O' : '[');
-      comm_send_char('B');
+      com_putc(ESCAPE_CODE);
+      com_putc(cursor_send_mode ? 'O' : '[');
+      com_putc('C');
     } else {
-      cursol_down(1);
+      cursor_right(1);
     }
-  }
-  if (key & KEY_Y2) { /* Right */
+    break;
+  case KEY_CURSOR_DOWN: /* Down */
     if (com_is_connected) {
-      comm_send_char(ESCAPE_CODE);
-      comm_send_char(cursol_send_mode ? 'O' : '[');
-      comm_send_char('C');
+      com_putc(ESCAPE_CODE);
+      com_putc(cursor_send_mode ? 'O' : '[');
+      com_putc('B');
     } else {
-      cursol_right(1);
+      cursor_down(1);
     }
-  }
-  if (key & KEY_Y4) { /* Left */
+    break;
+  case KEY_CURSOR_LEFT: /* Left */
     if (com_is_connected) {
-      comm_send_char(ESCAPE_CODE);
-      comm_send_char(cursol_send_mode ? 'O' : '[');
-      comm_send_char('D');
+      com_putc(ESCAPE_CODE);
+      com_putc(cursor_send_mode ? 'O' : '[');
+      com_putc('D');
     } else {
-      cursol_left(1);
+      cursor_left(1);
     }
+    break;
+
+  case KEY_SCREEN_UP:
+  case KEY_SCREEN_RIGHT:
+  case KEY_SCREEN_DOWN:
+  case KEY_SCREEN_LEFT:
+    break;
+
+  case KEY_F1:
+  case KEY_F2:
+  case KEY_F3:
+  case KEY_F4:
+  case KEY_F5:
+  case KEY_F6:
+  case KEY_F7:
+  case KEY_F8:
+  case KEY_F9:
+  case KEY_F10:
+    push_function_key(k);
+    break;
   }
+
   return (0);
 }
 
@@ -73,6 +107,7 @@ int key_A_action(int key)
 {
   int ch;
   int com_speed;
+  char * p;
 
   ch = keyboard_get_key();
   switch (ch) {
@@ -80,7 +115,7 @@ int key_A_action(int key)
     com_is_connected = !com_is_connected;
     keyboard_change_string(com_is_connected ? "Disconnect" : "Connect");
     print_com_connect();
-    print_keycursol();
+    print_keycursor();
     ch = '\0';
     break;
   case KEY_COM_SPEED:
@@ -90,18 +125,46 @@ int key_A_action(int key)
     keyboard_change_string((com_speed == COMM_SPEED_9600)
 			   ? "38400bps" : "9600bps");
     print_com_speed(com_speed);
-    print_keycursol();
+    print_keycursor();
     ch = '\0';
     break;
-  case KEY_CLEAR_SCREEN:
-    cursol_set(0, 0);
+  case KEY_CLEAN_SCREEN:
+    cursor_set(0, 0);
     screen_clear();
     refresh();
+    ch = '\0';
+    break;
+  case KEY_CHANGE_MODE:
+
+    /* */
+
+    print_keycursor();
+    ch = '\0';
+    break;
+  case KEY_LOG_SWITCH:
+    p = log_switch();
+    keyboard_change_string(p);
+    print_log_on();
+    print_keycursor();
     ch = '\0';
     break;
   case KEY_SEND_RESIZE:
     send_resize();
     refresh();
+    ch = '\0';
+    break;
+  case KEY_F1:
+  case KEY_F2:
+  case KEY_F3:
+  case KEY_F4:
+  case KEY_F5:
+  case KEY_F6:
+  case KEY_F7:
+  case KEY_F8:
+  case KEY_F9:
+  case KEY_F10:
+    push_function_key(ch);
+    print_keycursor();
     ch = '\0';
     break;
   }
@@ -110,7 +173,8 @@ int key_A_action(int key)
 
 int key_B_action(int key)
 {
-  return (NEWLINE_CODE);
+  mode_change();
+  return (0);
 }
 
 int key_START_action(int key)

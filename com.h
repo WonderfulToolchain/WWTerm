@@ -20,6 +20,9 @@ void com_pause();
 void com_unpause();
 void com_flush();
 void com_receive();
+int com_putc(unsigned char c);
+int com_puts(char * string);
+int com_putb(void * buffer, int size);
 
 #endif /* _WWTERM_COM_H_ */
 

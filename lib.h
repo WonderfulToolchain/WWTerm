@@ -19,6 +19,9 @@ void int2asc(int d, char * buffer);
 /* 文字列中から文字を探して，位置を返す */
 char * search_char(char c, char * s);
 
+/* エラーメッセージを表示して終了 */
+void error_exit(char * message);
+
 #endif /* _WWTERM_LIB_H_ */
 
 /* End of Program  */

@@ -47,20 +47,29 @@ int input_character()
   key = key_press_check();
   ch = '\0';
 
-  if (key & (KEY_X1 | KEY_X2 | KEY_X3 | KEY_X4)) {
-    ch = key_X1234_action(key);
-  }
-  if (key & (KEY_Y1 | KEY_Y2 | KEY_Y3 | KEY_Y4)) {
-    ch = key_Y1234_action(key);
-  }
+  wonx_lcddraw_level_down();
+  do {
+    if (key & (KEY_X1 | KEY_X2 | KEY_X3 | KEY_X4)) {
+      ch = key_X1234_action(key);
+      break;
+    }
+    if (key & (KEY_Y1 | KEY_Y2 | KEY_Y3 | KEY_Y4)) {
+      ch = key_Y1234_action(key);
+      break;
+    }
 
-  if (key & KEY_A    ) { ch = key_A_action(key); }
-  if (key & KEY_B    ) { ch = key_B_action(key); }
-  if (key & KEY_START) { ch = key_START_action(key); }
+    if (key & KEY_A    ) {
+      ch = key_A_action(key);
+      if (ch == '\0') break;
+    }
+    if (key & KEY_B    ) { ch = key_B_action(key); break; }
+    if (key & KEY_START) { ch = key_START_action(key); break; }
 
-  if (!com_is_connected) {
-    print_character(ch);
-  }
+    if (!com_is_connected) {
+      print_character(ch);
+    }
+  } while (0);
+  wonx_lcddraw_level_up();
 
   return (ch);
 }
@@ -77,7 +86,7 @@ void far key_handler()
     end_flag = 1;
   }
 
-  if (com_is_connected && (ch != 0)) comm_send_char(ch);
+  if (com_is_connected && (ch != 0)) com_putc(ch);
 }
 
 /* シリアル受信の割り込みハンドラ */
@@ -103,12 +112,14 @@ void far com_handler()
 /* 初期化 */
 void init(void)
 {
+  init_function_key();
   text_screen_init();
   screen_init();
   screen_clear();
   refresh();
 
   print_com_speed(DEFAULT_COM_SPEED);
+  print_log_on();
   print_com_connect();
   make_keyboard();
   cursor_display(1);
@@ -120,7 +131,7 @@ static intvector_t com_intvector;
 static intvector_t com_last_intvector;
 
 /* メイン */
-void main()
+int main()
 {
   init();
 

@@ -4,95 +4,252 @@
 #include "keyboard.h"
 #include "keymap.h"
 #include "screen.h"
+#include "lib.h"
+
+static void get_keymap();
+static char * get_symbol();
+static char * get_string();
+
+/* キーボードのモード(Shiftで変更) */
+static int keyboard_mode = 0;
 
 /* キーボードのカーソル座標 */
-int keyboard_cursol_x = 0;
-int keyboard_cursol_y = 0;
+static int keyboard_cursor_x = 0;
+static int keyboard_cursor_y = 0;
 
-void clear_keycursol()
+/* 現在フォーカスしているキーマップ */
+static int keymap_x = 0;
+static int keymap_y = 0;
+static keymap * keymap_key = &(keyboard[0][0][0]);
+
+/* ファンクションキー */
+static char * function_key[FUNCTION_KEY_NUMBER];
+
+void keycursor_up()
 {
-  text_put_char(KEYBOARD_X - 1, KEYBOARD_Y + keyboard_cursol_y, ' ');
-  text_put_char(KEYBOARD_X + keyboard_cursol_x, KEYBOARD_Y - 1, '-');
-  font_normal(KEYBOARD_X + keyboard_cursol_x, KEYBOARD_Y + keyboard_cursol_y);
+  clear_keycursor();
+  keyboard_cursor_y--;
+  if (keyboard_cursor_y < 0) keyboard_cursor_y = KEYBOARD_HEIGHT - 1;
+  get_keymap();
+  print_keycursor();
 }
 
-void print_keycursol()
+void keycursor_down()
 {
-  static char string[10];
-  int i, len;
+  clear_keycursor();
+  keyboard_cursor_y++;
+  if (keyboard_cursor_y > KEYBOARD_HEIGHT - 1) keyboard_cursor_y = 0;
+  get_keymap();
+  print_keycursor();
+}
 
-  keyboard_copy_string(string);
-  len = strlen(string);
-  for (i = len; i < KEY_STRING_MAX_LENGTH; i++) {
-    string[i] = '-';
+void keycursor_left()
+{
+  clear_keycursor();
+  get_keymap();
+  keyboard_cursor_x = keymap_x;
+  keyboard_cursor_y = keymap_y;
+  keyboard_cursor_x--;
+  if (keyboard_cursor_x < 0) keyboard_cursor_x = KEYBOARD_WIDTH - 1;
+  get_keymap();
+  keyboard_cursor_x = keymap_x;
+  keyboard_cursor_y = keymap_y;
+  get_keymap();
+  print_keycursor();
+}
+
+void keycursor_right()
+{
+  clear_keycursor();
+  get_keymap();
+  keyboard_cursor_x = keymap_x;
+  keyboard_cursor_y = keymap_y;
+  keyboard_cursor_x++;
+  if (keyboard_cursor_x > KEYBOARD_WIDTH - 1) keyboard_cursor_x = 0;
+  while (1) {
+    keymap_key =
+      &(keyboard[keyboard_mode][keyboard_cursor_y][keyboard_cursor_x]);
+    if (keymap_key->key != KEY_SL) break;
+    keyboard_cursor_x++;
+    if (keyboard_cursor_x > KEYBOARD_WIDTH - 1) keyboard_cursor_x = 0;
   }
-  string[KEY_STRING_MAX_LENGTH] = '\0';
+  while (1) {
+    keymap_key =
+      &(keyboard[keyboard_mode][keyboard_cursor_y][keyboard_cursor_x]);
+    if ((keymap_key->key != KEY_SL) && (keymap_key->key != 0)) break;
+    keyboard_cursor_x++;
+    if (keyboard_cursor_x > KEYBOARD_WIDTH - 1) keyboard_cursor_x = 0;
+  }
+  get_keymap();
+  keyboard_cursor_x = keymap_x;
+  keyboard_cursor_y = keymap_y;
+  get_keymap();
+  print_keycursor();
+}
 
-  text_put_char(KEYBOARD_X - 1, KEYBOARD_Y + keyboard_cursol_y, 0x10);
-  text_put_char(KEYBOARD_X + keyboard_cursol_x, KEYBOARD_Y - 1, 0x1f);
-  text_put_string(KEYBOARD_X + KEYBOARD_WIDTH  - KEY_STRING_MAX_LENGTH,
-		  KEYBOARD_Y + KEYBOARD_HEIGHT - 1, string);
-  font_reverse(KEYBOARD_X + keyboard_cursol_x, KEYBOARD_Y + keyboard_cursol_y);
-#if 0
-  cursor_set_location(KEYBOARD_X + keyboard_cursol_x,
-		      KEYBOARD_Y + keyboard_cursol_y, 1, 1);
-#endif
+void mode_change()
+{
+  clear_keycursor();
+  get_keymap();
+  keyboard_mode++;
+  if (keyboard_mode > KEYBOARD_MODE_NUM - 1)
+    keyboard_mode = 0;
+  make_keyboard();
+}
+
+static void get_keymap()
+{
+  keymap_x = keyboard_cursor_x;
+  keymap_y = keyboard_cursor_y;
+
+  while (1) {
+    keymap_key = &(keyboard[keyboard_mode][keymap_y][keymap_x]);
+    if ((keymap_key->key != 0) && (keymap_key->key != KEY_SL)) break;
+    /* キーが存在しない場合は，すぐ左のキーが有効になる */
+    keymap_x--; if (keymap_x < 0) keymap_x = KEYBOARD_WIDTH - 1;
+    /* １周してしまった場合は，すぐ上のキーが有効になる */
+    if (keymap_x == keyboard_cursor_x) {
+      keymap_y--; if (keymap_y < 0) keymap_y = KEYBOARD_HEIGHT - 1;
+      if (keymap_y == keyboard_cursor_y) {
+	/* 全周してしまうことはいくらなんでもありえないだろう */
+	error_exit("no keymap");
+      }
+    }
+  }
+}
+
+void clear_keycursor()
+{
+  int i, len;
+  len = strlen(get_symbol());
+  wonx_lcddraw_level_down();
+  for (i = 0; i < len; i++) {
+    font_normal(KEYBOARD_X + keymap_x + i, KEYBOARD_Y + keymap_y);
+  }
+  wonx_lcddraw_level_up();
+}
+
+void print_keycursor()
+{
+  char c;
+  int i, len;
+  char * string;
+
+  string = get_string();
+  len = strlen(string);
+  wonx_lcddraw_level_down();
+  for (i = 0; i < KEY_STRING_MAX_LENGTH; i++) {
+    c = (i < KEY_STRING_MAX_LENGTH - len) ? '-' : string[i - KEY_STRING_MAX_LENGTH + len];
+    if (c == 0x0a)
+      c = 0x19;
+    else if ((c < 0x20) || (c > 0x7e))
+      c = ' ';
+    text_put_char(i, KEYBOARD_Y - 1, c);
+  }
+
+  string = get_symbol();
+  len = strlen(string);
+  for (i = 0; i < len; i++) {
+    font_reverse(KEYBOARD_X + keymap_x + i, KEYBOARD_Y + keymap_y);
+  }
+  wonx_lcddraw_level_up();
 }
 
 void make_keyboard()
 {
-  for (keyboard_cursol_y = 0;
-       keyboard_cursol_y < KEYBOARD_HEIGHT;
-       keyboard_cursol_y++) {
-    for (keyboard_cursol_x = 0;
-	 keyboard_cursol_x < KEYBOARD_WIDTH;
-	 keyboard_cursol_x++) {
-      text_put_char(KEYBOARD_X + keyboard_cursol_x,
-		    KEYBOARD_Y + keyboard_cursol_y, keyboard_get_symbol());
+  int key, i;
+  char * string;
+  char * p;
+  int x, y;
+
+  wonx_lcddraw_level_down();
+  for (y = 0; y < KEYBOARD_HEIGHT; y++) {
+    for (x = 0; x < KEYBOARD_WIDTH; x++) {
+      keymap_key = &(keyboard[keyboard_mode][y][x]);
+      key = keyboard_get_key();
+      if (key == 0) {
+	text_put_char(KEYBOARD_X + x, KEYBOARD_Y + y, ' ');
+      } else if (key == KEY_SL) {
+	/* NOP */
+      } else {
+	string = get_symbol();
+	text_put_string(KEYBOARD_X + x, KEYBOARD_Y + y, string);
+      }
     }
   }
 
   text_put_string(0, KEYBOARD_Y - 1, "----------------------------");
 
-  text_put_string(0, KEYBOARD_Y + KEYBOARD_HEIGHT + 0,
-		  "X1234)Select A)Input B)Enter");
-  text_put_string(0, KEYBOARD_Y + KEYBOARD_HEIGHT + 1,
-		  "Y1234)Move START)Quit");
+  for (i = 0; i < KEYINFO_HEIGHT; i++) {
+    p = keyinfo[keyboard_mode][i];
+    text_put_string(0, KEYBOARD_Y + KEYBOARD_HEIGHT + i, p);
+  }
+  wonx_lcddraw_level_up();
 
-  keyboard_cursol_x = 0;
-  keyboard_cursol_y = 0;
-
-  print_keycursol();
+  get_keymap();
+  print_keycursor();
 }
 
 int keyboard_get_key()
 {
-  return (keyboard[keyboard_cursol_y][keyboard_cursol_x].key);
+  return (keymap_key->key);
 }
 
-unsigned char keyboard_get_symbol()
+static char * get_symbol()
 {
-  unsigned char symbol;
-  symbol = keyboard[keyboard_cursol_y][keyboard_cursol_x].symbol;
-  if (symbol == '\0') symbol = keyboard_get_key();
+  static char buffer[2];
+  char * symbol;
+  int key;
+
+  symbol = keymap_key->symbol;
+  if (symbol == NULL) {
+    key = keyboard_get_key();
+    if (key <= 0) key = 'E';
+    buffer[0] = key;
+    buffer[1] = '\0';
+    symbol = buffer;
+  }
   return (symbol);
 }
 
-void keyboard_copy_string(char * buffer)
+static char * get_string()
 {
+  int key;
   char * string;
-  string = keyboard[keyboard_cursol_y][keyboard_cursol_x].string;
-  if (string == NULL) {
-    buffer[0] = keyboard_get_symbol();
-    buffer[1] = '\0';
-  } else {
-    strcpy(buffer, string);
+
+  key = keyboard_get_key();
+  if ((key <= KEY_F1) && (key >= KEY_F1 - FUNCTION_KEY_NUMBER + 1)) {
+    return (get_function_key(KEY_F1 - key));
   }
+
+  string = keymap_key->string;
+  if (string == NULL) {
+    string = get_symbol();
+  }
+  return (string);
 }
 
 void keyboard_change_string(char * string)
 {
-  keyboard[keyboard_cursol_y][keyboard_cursol_x].string = string;
+  keymap_key->string = string;
+}
+
+int keyboard_get_y1234map(int y)
+{
+  return (y1234map[keyboard_mode][y]);
+}
+
+void init_function_key()
+{
+  int i;
+  for (i = 0; i < FUNCTION_KEY_NUMBER; i++) {
+    function_key[i] = default_function_key[i];
+  }
+}
+
+char * get_function_key(int n)
+{
+  return (function_key[n]);
 }
 
 /* End of Program  */

@@ -53,7 +53,7 @@ void parse_dec_escseq(char command1, int command2)
   case 'h': /* ESC[?h DEC専用モード設定 */
     switch (command2) {
     case 1: /* カーソルキーをアプリケーションモードにする */
-      cursol_send_mode = 1;
+      cursor_send_mode = 1;
       break;
     }
     break;
@@ -61,7 +61,7 @@ void parse_dec_escseq(char command1, int command2)
   case 'l': /* ESC[?l DEC専用モードクリア */
     switch (command2) {
     case 1: /* アプリケーションモードをクリアする */
-      cursol_send_mode = 0;
+      cursor_send_mode = 0;
       break;
     }
     break;
@@ -74,13 +74,13 @@ void escape_send_stat(char command)
   static char buffer[30];
   switch (command) {
   case 5:
-    comm_send_char(ESCAPE_CODE);
-    comm_send_string("[0n");
+    com_putc(ESCAPE_CODE);
+    com_puts("[0n");
     break;
   case 6:
     buffer[0] = ESCAPE_CODE;
-    sprintf(buffer + 1, "[%d;%dR", cursol_y + 1, cursol_x + 1);
-    comm_send_string(buffer);
+    sprintf(buffer + 1, "[%d;%dR", cursor_y + 1, cursor_x + 1);
+    com_puts(buffer);
     break;
   }
 }
@@ -91,13 +91,13 @@ void escape_screen_clear(char command)
   int i;
   switch (command) {
   case 0: /* カーソル位置から画面の終りまでをクリア */
-    for (i = cursol_x; i < WIDTH; i++) { screen[cursol_y][i] = ' '; }
-    for (i = cursol_y + 1; i < HEIGHT; i++) { line_clear(i); }
+    for (i = cursor_x; i < WIDTH; i++) { screen[cursor_y][i] = ' '; }
+    for (i = cursor_y + 1; i < HEIGHT; i++) { line_clear(i); }
     refresh();
     break;
   case 1: /* 基点からカーソル位置までをクリア */
-    for (i = 0; i < cursol_x + 1; i++) { screen[cursol_y][i] = ' '; }
-    for (i = 0; i < cursol_y; i++) { line_clear(i); }
+    for (i = 0; i < cursor_x + 1; i++) { screen[cursor_y][i] = ' '; }
+    for (i = 0; i < cursor_y; i++) { line_clear(i); }
     refresh();
     break;
   case 2: /* 画面をすべてクリア */
@@ -113,15 +113,15 @@ void escape_line_clear(char command)
   int i;
   switch (command) {
   case 0: /* カーソル位置から行の終りまでをクリア */
-    for (i = cursol_x; i < WIDTH; i++) { screen[cursol_y][i] = ' '; }
+    for (i = cursor_x; i < WIDTH; i++) { screen[cursor_y][i] = ' '; }
     refresh();
     break;
   case 1: /* 行の先頭からカーソル位置までをクリア */
-    for (i = 0; i < cursol_x + 1; i++) { screen[cursol_y][i] = ' '; }
+    for (i = 0; i < cursor_x + 1; i++) { screen[cursor_y][i] = ' '; }
     refresh();
     break;
   case 2: /* 行をすべてクリア */
-    line_clear(cursol_y);
+    line_clear(cursor_y);
     refresh();
     break;
   }
@@ -135,16 +135,16 @@ void escape_ins_del(char command, int parameter)
   switch (command) {
 
   case 'L': /* ESC[L 行の挿入 */
-    for (i = HEIGHT - 1; i > cursol_y + parameter - 1; i--) {
+    for (i = HEIGHT - 1; i > cursor_y + parameter - 1; i--) {
       memcpy(screen[i], screen[i - parameter], sizeof(screen[0][0]) * WIDTH);
     }
-    for (i = cursol_y; i < cursol_y + parameter; i++) {
+    for (i = cursor_y; i < cursor_y + parameter; i++) {
       line_clear(i);
     }
     break;
 
   case 'M': /* ESC[M 行の削除 */
-    for (i = cursol_y; i < HEIGHT - parameter; i++) {
+    for (i = cursor_y; i < HEIGHT - parameter; i++) {
       memcpy(screen[i], screen[i + parameter], sizeof(screen[0][0]) * WIDTH);
     }
     for (i = HEIGHT - 1; i > HEIGHT - 1 - parameter; i--) {
@@ -156,26 +156,21 @@ void escape_ins_del(char command, int parameter)
 
 void send_resize()
 {
-  int i;
   if (com_is_connected) {
 #if 1
-    comm_send_string(resize_begin);
-    comm_send_string(resize_end);
+    com_puts(resize_begin);
+    com_puts(resize_end);
 #else
-    comm_send_block(resize_begin, sizeof(resize_begin));
-    comm_send_char(0x00);
-    comm_send_char(WIDTH);
-    comm_send_char(0x00);
-    comm_send_char(HEIGHT);
-    comm_send_block(resize_end, sizeof(resize_end));
+    com_putb(resize_begin, sizeof(resize_begin));
+    com_putc(0x00);
+    com_putc(WIDTH);
+    com_putc(0x00);
+    com_putc(HEIGHT);
+    com_putb(resize_end, sizeof(resize_end));
 #endif
   } else {
-    for (i = 0; resize_begin[i] != '\0'; i++) {
-      print_character(resize_begin[i]);
-    }
-    for (i = 0; resize_end[i] != '\0'; i++) {
-      print_character(resize_end[i]);
-    }
+    print_string(resize_begin);
+    print_string(resize_end);
   }
 }
 

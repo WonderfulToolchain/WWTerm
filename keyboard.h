@@ -6,16 +6,21 @@
 #include "types.h"
 
 /* キーボードのカーソル座標 */
-extern int keyboard_cursol_x;
-extern int keyboard_cursol_y;
+void keycursor_up();
+void keycursor_down();
+void keycursor_left();
+void keycursor_right();
 
-void clear_keycursol();
-void print_keycursol();
+void mode_change();
+
+void clear_keycursor();
+void print_keycursor();
 void make_keyboard();
 int keyboard_get_key();
-unsigned char keyboard_get_symbol();
-void keyboard_copy_string(char * buffer);
 void keyboard_change_string(char * string);
+int keyboard_get_y1234map(int y);
+void init_function_key();
+char * get_function_key(int n);
 
 #endif /* _WWTERM_KEYBOARD_H_ */
 

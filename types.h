@@ -3,6 +3,10 @@
 
 #include <sys/text.h>
 
+#ifdef _WONX_
+#include "wonx/wonx.h"
+#endif
+
 /* デフォルトの通信速度 */
 #define DEFAULT_COM_SPEED COMM_SPEED_9600
 
@@ -23,15 +27,21 @@
 
 /* ターミナルのスクリーンサイズ */
 #define WIDTH  (TEXT_SCREEN_WIDTH)
-#define HEIGHT (TEXT_SCREEN_HEIGHT - 8)
+#define HEIGHT (TEXT_SCREEN_HEIGHT - 6)
 
 /* キーボードの表示位置 */
-#define KEYBOARD_X 1
+#define KEYBOARD_X 0
 #define KEYBOARD_Y (HEIGHT + 1)
 
+/* キーボードのモード数 */
+#define KEYBOARD_MODE_NUM 3
+
 /* キーボードのサイズ */
-#define KEYBOARD_WIDTH 27
-#define KEYBOARD_HEIGHT 5
+#define KEYBOARD_WIDTH 28
+#define KEYBOARD_HEIGHT 3
+
+#define KEYINFO_WIDTH  28
+#define KEYINFO_HEIGHT  2
 
 /* XON, XOFF */
 #define XON  0x11
@@ -42,6 +52,21 @@
 
 /* エスケープ文字 */
 #define ESCAPE_CODE 0x1b
+
+/* ログの出力用ファイル名 */
+#ifdef _WONX_
+#define LOG_FILE "log%d"
+#else
+#define LOG_FILE "/ram0/log%d"
+#endif
+
+#ifdef _WONX_ /* WonX用 */
+#define wonx_lcddraw_level_down() wonx_lcddraw_level_down()
+#define wonx_lcddraw_level_up()   wonx_lcddraw_level_up()
+#else
+#define wonx_lcddraw_level_down() do { /* None */ } while (0)
+#define wonx_lcddraw_level_up()   do { /* None */ } while (0)
+#endif
 
 #endif /* _WWTERM_TYPES_H_ */
 

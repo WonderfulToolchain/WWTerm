@@ -1,0 +1,44 @@
+VERSION = WWTerm-1.0
+PKGNAME = wwterm-1.0
+
+#OBJS = terminal.obj termlib.obj lib.obj keyboard.obj keymap.obj com.obj screen.obj escape.obj esclib.obj log.obj
+#OBJS_FULL = D:\\terminal.obj D:\\termlib.obj D:\\lib.obj D:\\keyboard.obj D:\\keymap.obj D:\\com.obj D:\\screen.obj D:\\escape.obj D:\\esclib.obj D:\\log.obj
+OBJS = terminal.o termlib.o lib.o keyboard.o keymap.o com.o screen.o escape.o esclib.o log.o
+
+#.SUFFIXES: .c .obj
+.SUFFIXES: .c .o
+
+#terminal.fx :	terminal.bin
+#	doscmd mkfent16 D:\\terminal.cf
+
+#terminal.bin :	$(OBJS)
+#	echo $(OBJS_FULL) > objs
+#	doscmd lcc86 -O -o D:\\terminal.bin @D:\\objs
+
+terminal :	$(OBJS)
+	$(CC) -g -Wall -o terminal $(OBJS) -L. -L/usr/local/lib -L/usr/X11R6/lib -lwonx -lX11 -lXt
+
+#.c.obj :	$*.c
+#	doscmd lcc86 -c D:\\$*.c -O -I.
+
+.c.o :		$*.c
+	$(CC) -c $*.c -g -Wall -I. -I/usr/local/include
+
+wonx :
+	mkdir -p wonx-2.2
+	cp *.[ch] wonx-2.2
+	cp makefile_wonx wonx-2.2/makefile
+	cd wonx-2.2 ; challsrc.sh *.[ch] ; $(MAKE)
+
+clean :
+#	rm -f terminal.fx terminal.bin *.obj $(PKGNAME).zip
+	rm -f terminal *.o $(PKGNAME).zip
+
+package :	terminal.bin terminal.fx
+	mkdir -p $(PKGNAME)
+	rm -fR $(PKGNAME)/*
+	cp COPYING COPYRIGHT OMAKE.jpn README README.sjis \
+		makefile makefile_wonx \
+		*.h *.c *.bin *.cf *.fx $(PKGNAME)
+	zip -r wwterm $(PKGNAME)
+	mv wwterm.zip $(PKGNAME).zip

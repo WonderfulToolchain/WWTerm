@@ -5,7 +5,7 @@
 extern int escseq_length;
 extern char escseq_buffer[];
 
-extern int cursol_send_mode;
+extern int cursor_send_mode;
 
 /* 引数 */
 extern int escape_args[];

@@ -10,7 +10,7 @@
 int escseq_length = 0;
 char escseq_buffer[20] = "\0";
 
-int cursol_send_mode = 0; /* DEC専用モードのアプリケーションモード */
+int cursor_send_mode = 0; /* DEC専用モードのアプリケーションモード */
 
 /* 引数 */
 int escape_args[20];
@@ -40,48 +40,48 @@ void parse_escseq()
 
   case 'A': /* ESC[A カーソルを上に移動 */
     if (tmp1 < 0) tmp1 = 1;
-    cursol_up(tmp1);
+    cursor_up(tmp1);
     break;
 
   case 'B': /* ESC[B カーソルを下に移動 */
   case 'e': /* ESC[e カーソルを下に移動 */
     if (tmp1 < 0) tmp1 = 1;
-    cursol_down(tmp1);
+    cursor_down(tmp1);
     break;
 
   case 'C': /* ESC[C カーソルを右に移動 */
   case 'a': /* ESC[a カーソルを右に移動 */
     if (tmp1 < 0) tmp1 = 1;
-    cursol_right(tmp1);
+    cursor_right(tmp1);
     break;
 
   case 'D': /* ESC[D カーソルを左に移動 */
     if (tmp1 < 0) tmp1 = 1;
-    cursol_left(tmp1);
+    cursor_left(tmp1);
     break;
 
   case 'G': /* ESC[G カーソルのx座標を設定 */
     tmp1--;
     if (tmp1 < 0) tmp1 = 0;
-    cursol_set_x(tmp1);
+    cursor_set_x(tmp1);
     break;
 
   case 'd': /* ESC[d カーソルのy座標を設定 */
     tmp1--;
     if (tmp1 < 0) tmp1 = 0;
-    cursol_set_y(tmp1);
+    cursor_set_y(tmp1);
     break;
 
   case 'E': /* ESC[E カーソルをpar1行下の先頭に移動する */
     if (tmp1 < 0) tmp1 = 1;
-    cursol_down(tmp1);
-    cursol_set_x(0);
+    cursor_down(tmp1);
+    cursor_set_x(0);
     break;
 
   case 'F': /* ESC[F カーソルをpar1行上の先頭に移動する */
     if (tmp1 < 0) tmp1 = 1;
-    cursol_up(tmp1);
-    cursol_set_x(0);
+    cursor_up(tmp1);
+    cursor_set_x(0);
     break;
 
   case 'H': /* ESC[<row>;<col>H カーソルを指定した座標に移動 */
@@ -89,7 +89,7 @@ void parse_escseq()
     tmp2--;
     if (tmp1 < 0) tmp1 = 0;
     if (tmp2 < 0) tmp2 = 0;
-    cursol_set(tmp2, tmp1);
+    cursor_set(tmp2, tmp1);
     break;
 
   case 'J': /* ESC[J クリア */

@@ -1,3 +1,5 @@
+#include <sys/key.h>
+#include "types.h"
 #include "lib.h"
 
 /* isdigit() と同じ */
@@ -45,6 +47,20 @@ char * search_char(char c, char * s)
     s++;
   }
   return (s);
+}
+
+/* エラーメッセージを表示して終了 */
+void error_exit(char * message)
+{
+  int key;
+  text_put_string(0, KEYBOARD_Y - 1, message);
+
+  while (1) {
+    key = key_press_check();
+    if (key & KEY_START) break;
+  }
+
+  bios_exit();
 }
 
 /* End of Program  */

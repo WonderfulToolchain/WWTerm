@@ -5,97 +5,100 @@
 #include "com.h"
 #include "lib.h"
 #include "escape.h"
+#include "log.h"
 
 /* ターミナルのスクリーン */
 char screen[HEIGHT][WIDTH];
 
 /* カーソルの位置 */
-int cursol_x = 0;
-int cursol_y = 0;
+int cursor_x = 0;
+int cursor_y = 0;
 
 void refresh(void)
 {
   int y;
 
+  wonx_lcddraw_level_down();
   for (y = 0; y < HEIGHT; y++) {
     text_put_substring(0, y, screen[y], WIDTH);
   }
+  wonx_lcddraw_level_up();
 }
 
-static void cursol_check()
+static void cursor_check()
 {
   int i;
 
-  while (cursol_x < 0) {
-    cursol_x += WIDTH;
-    cursol_y--;
+  while (cursor_x < 0) {
+    cursor_x += WIDTH;
+    cursor_y--;
   }
 
-  while (cursol_x > WIDTH - 1) {
-    cursol_x -= WIDTH;
-    cursol_y++;
+  while (cursor_x > WIDTH - 1) {
+    cursor_x -= WIDTH;
+    cursor_y++;
   }
 
-  if (cursol_y < 0) cursol_y = 0;
+  if (cursor_y < 0) cursor_y = 0;
 
-  if (cursol_y >= HEIGHT) {
-    while (cursol_y >= HEIGHT) {
+  if (cursor_y >= HEIGHT) {
+    while (cursor_y >= HEIGHT) {
       for (i = 0; i < HEIGHT - 1; i++) {
 	memcpy(screen[i], screen[i + 1], sizeof(screen[0][0]) * WIDTH);
       }
       line_clear(i);
-      cursol_y--;
+      cursor_y--;
     }
     refresh();
   }
 
-  cursor_set_location(cursol_x, cursol_y, 1, 1);
+  cursor_set_location(cursor_x, cursor_y, 1, 1);
 }
 
-void cursol_up(int add)
+void cursor_up(int add)
 {
-  cursol_y -= add;
-  cursol_check();
+  cursor_y -= add;
+  cursor_check();
 }
 
-void cursol_down(int add)
+void cursor_down(int add)
 {
-  cursol_y += add;
-  cursol_check();
+  cursor_y += add;
+  cursor_check();
 }
 
-void cursol_left(int add)
+void cursor_left(int add)
 {
-  cursol_x -= add;
-  cursol_check();
+  cursor_x -= add;
+  cursor_check();
 }
 
-void cursol_right(int add)
+void cursor_right(int add)
 {
-  cursol_x += add;
-  cursol_check();
+  cursor_x += add;
+  cursor_check();
 }
 
-void cursol_set_x(int x)
+void cursor_set_x(int x)
 {
   if (x < 0         ) x = 0;
   if (x > WIDTH  - 1) x = WIDTH  - 1;
-  cursol_x = x;
-  cursol_check();
+  cursor_x = x;
+  cursor_check();
 }
 
-void cursol_set_y(int y)
+void cursor_set_y(int y)
 {
   if (y < 0         ) y = 0;
   if (y > HEIGHT - 1) y = HEIGHT - 1;
-  cursol_y = y;
-  cursol_check();
+  cursor_y = y;
+  cursor_check();
 }
 
-void cursol_set(int x, int y)
+void cursor_set(int x, int y)
 {
-  cursol_set_x(x);
-  cursol_set_y(y);
+  cursor_set_x(x);
+  cursor_set_y(y);
 }
 
 void font_normal(int x, int y)
@@ -128,35 +131,40 @@ void screen_init()
 void screen_clear(void)
 {
   int i;
+
+  wonx_lcddraw_level_down();
   for (i = 0; i < HEIGHT; i++) line_clear(i);
+  wonx_lcddraw_level_up();
 }
 
 void print_com_speed(int com_speed)
 {
-  char * s = "ERR";
-
-  if      (com_speed == COMM_SPEED_9600 ) { s = " 96"; }
-  else if (com_speed == COMM_SPEED_38400) { s = "384"; }
-
-  text_put_string(22, KEYBOARD_Y + KEYBOARD_HEIGHT + 1, s);
-
+  text_put_string(23, KEYBOARD_Y + KEYBOARD_HEIGHT + 1,
+		  (com_speed == COMM_SPEED_9600) ? " 96" : "384");
   comm_set_baudrate(com_speed);
+}
+
+void print_log_on()
+{
+  text_put_string(26, KEYBOARD_Y + KEYBOARD_HEIGHT + 1,
+		  is_log_on() ? "L" : "N");
 }
 
 void print_com_connect()
 {
-  char * s;
-
-  if (com_is_connected) s = "Cn";
-  else                  s = "NC";
-
-  text_put_string(26, KEYBOARD_Y + KEYBOARD_HEIGHT + 1, s);
+  text_put_string(27, KEYBOARD_Y + KEYBOARD_HEIGHT + 1,
+		  com_is_connected ? "C" : "N");
 }
 
 /* ターミナルスクリーンへの文字表示 */
 void print_character(char c)
 {
   static char last = '\0'; /* \r\n を \n にするため */
+
+  wonx_lcddraw_level_down();
+
+  /* ログの出力 */
+  log_putc(c);
 
   /* エスケープシーケンスの処理 */
   if ((c == ESCAPE_CODE) || (escseq_length > 0)) {
@@ -168,32 +176,44 @@ void print_character(char c)
       escseq_length = 0;
       escseq_buffer[0] = '\0';
     }
-    last = c;
-    return;
+    goto ret1;
   }
 
   if (c == '\0') {
-    last = c;
-    return;
+    goto ret1;
   } else if (c == '\r') {
-    if (last == '\n') { return; } /* \n\r を \n にする */
-    cursol_set_x(0);
-    cursol_down(1);
+    if (last == '\n') { goto ret2; } /* \n\r を \n にする */
+    cursor_set_x(0);
+    cursor_down(1);
   } else if (c == '\n') {
-    if (last == '\r') { return; } /* \r\n を \r にする */
-    cursol_set_x(0);
-    cursol_down(1);
+    if (last == '\r') { goto ret2; } /* \r\n を \r にする */
+    cursor_set_x(0);
+    cursor_down(1);
   } else if (c == 0x08) { /* バックスペース */
-    cursol_left(1);
+    cursor_left(1);
   } else if (c == 0x7f) { /* DEL */
     /* とりあえず，なにもしない */
   } else if ( (0x20 <= c) && (c <= 0x7e) ) {
-    text_put_char(cursol_x, cursol_y, c);
-    screen[cursol_y][cursol_x] = c;
-    cursol_right(1);
+    text_put_char(cursor_x, cursor_y, c);
+    screen[cursor_y][cursor_x] = c;
+    cursor_right(1);
   }
 
+ret1:
   last = c;
+ret2:
+  wonx_lcddraw_level_up();
+  return;
+}
+
+void print_string(char * s)
+{
+  wonx_lcddraw_level_down();
+  while (*s != '\0') {
+    print_character(*s);
+    s++;
+  }
+  wonx_lcddraw_level_up();
 }
 
 /* End of Program  */

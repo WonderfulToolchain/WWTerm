@@ -1,5 +1,6 @@
 #include "com.h"
 #include "screen.h"
+#include "log.h"
 
 /* 受信バッファ */
 char com_receive_buffer[BUFFER_SIZE] = FIRST_STRING;
@@ -31,10 +32,12 @@ void com_flush()
 #ifdef COM_PAUSE_IN_PRINTING
   com_pause();
 #endif
+  wonx_lcddraw_level_down();
   while (com_receive_start != com_receive_end) {
     print_character(com_receive_buffer[com_receive_start]);
     com_receive_start = (com_receive_start + 1) % BUFFER_SIZE;
   }
+  wonx_lcddraw_level_up();
 #ifdef COM_PAUSE_IN_PRINTING
   com_unpause();
 #endif
@@ -49,9 +52,9 @@ void com_receive()
 
   if (!com_is_connected) { return; }
 
-  if (c == ERR_SIO_TIMEOUT) { return; }
-  if (c == ERR_SIO_CANCEL ) { return; }
-  if (c == ERR_SIO_OVERRUN) { return; }
+  if (c == (int)ERR_SIO_TIMEOUT) { return; }
+  if (c == (int)ERR_SIO_CANCEL ) { return; }
+  if (c == (int)ERR_SIO_OVERRUN) { return; }
 
   e = (com_receive_end + 1) % BUFFER_SIZE;
 
@@ -66,6 +69,24 @@ void com_receive()
 
   com_receive_buffer[com_receive_end] = c;
   com_receive_end = e;
+}
+
+int com_putc(unsigned char c)
+{
+  log_putc(c);
+  return (comm_send_char(c));
+}
+
+int com_puts(char * string)
+{
+  log_puts(string);
+  return (comm_send_string(string));
+}
+
+int com_putb(void * buffer, int size)
+{
+  log_putb(buffer, size);
+  return (comm_send_block(buffer, size));
 }
 
 /* End of Program  */
