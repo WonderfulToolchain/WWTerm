@@ -23,7 +23,7 @@
 #define BUFFER_SIZE 1024
 
 /* 最初に表示する文字列 */
-#define FIRST_STRING "WWTerm(C)2000 SAKAI Hiroaki.\nPush S at left-below of the\nvirtual keyboard to change\nthe serial port speed.\nPush C at left-below of the\nvirtual keyboard to connect\nthe serial port.\n"
+#define FIRST_STRING "WWTerm(C)2000-2002 SAKAI Hiroaki.\nPush S at left-below of the\nvirtual keyboard to change\nthe serial port speed.\nPush C at left-below of the\nvirtual keyboard to connect\nthe serial port.\n"
 
 /* ターミナルのスクリーンサイズ */
 #define WIDTH  (TEXT_SCREEN_WIDTH)
@@ -53,12 +53,42 @@
 /* エスケープ文字 */
 #define ESCAPE_CODE 0x1b
 
-/* ログの出力用ファイル名 */
 #ifdef _WONX_
-#define LOG_FILE "log%d"
+#define RAMDIR /* None */
+#define ROMDIR /* None */
+#define FOPEN_FOR_RT "rt"
+#define FOPEN_FOR_RB "rb"
+#define FOPEN_FOR_WT "wt"
+#define FOPEN_FOR_WB "wb"
 #else
-#define LOG_FILE "/ram0/log%d"
+#define RAMDIR "/ram0/"
+#define ROMDIR "/rom0/"
+#define FOPEN_FOR_RT "r"
+#define FOPEN_FOR_RB "r"
+#define FOPEN_FOR_WT "w"
+#define FOPEN_FOR_WB "w"
 #endif
+
+/* ログの出力用ファイル名 */
+#define LOG_FILE (RAMDIR "log%d")
+
+/* ファンクションキーの定義ファイル */
+#define FUNCTION_KEY_FILE (ROMDIR "wwtfunc")
+
+/* ファンクションキーのバッファサイズ */
+#define FUNCTION_KEY_BUFSIZE 280
+
+/* デフォルトのファンクションキー */
+#define FUNCTION_KEY_F1  "ls "
+#define FUNCTION_KEY_F2  "cd "
+#define FUNCTION_KEY_F3  "cd ..\n"
+#define FUNCTION_KEY_F4  "cat "
+#define FUNCTION_KEY_F5  "pwd\n"
+#define FUNCTION_KEY_F6  "eval `resize`\n"
+#define FUNCTION_KEY_F7  "TERM=vt100 ; export TERM\n"
+#define FUNCTION_KEY_F8  "setenv TERM vt100\n"
+#define FUNCTION_KEY_F9  "exit\n"
+#define FUNCTION_KEY_F10 "logout\n"
 
 #ifdef _WONX_ /* WonX用 */
 #define wonx_lcddraw_level_down() wonx_lcddraw_level_down()

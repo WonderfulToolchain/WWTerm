@@ -1,0 +1,8 @@
+assign A: /dev/rfd0.1440 1440
+assign C: /home/hiroaki/WWitch
+assign D: /home/hiroaki/WWitch/programs/terminal/wwtrm100
+assign T: /tmp
+FILES=20
+PATH=C:\bin16;C:lsic86ww\bin16
+TMP=T:
+TZ=JST-9

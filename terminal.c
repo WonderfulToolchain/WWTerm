@@ -34,6 +34,7 @@
 #include "keymap.h"
 #include "com.h"
 #include "screen.h"
+#include "log.h"
 
 /* 終了のフラグ */
 static int end_flag = 0;
@@ -112,16 +113,17 @@ void far com_handler()
 /* 初期化 */
 void init(void)
 {
-  init_function_key();
   text_screen_init();
   screen_init();
   screen_clear();
   refresh();
 
+  wonx_lcddraw_level_down();
   print_com_speed(DEFAULT_COM_SPEED);
   print_log_on();
   print_com_connect();
-  make_keyboard();
+  wonx_lcddraw_level_up();
+  init_keyboard();
   cursor_display(1);
 }
 
@@ -166,6 +168,7 @@ int main()
   sys_interrupt_reset_hook(SYS_INT_RECEIVEREADY, &com_last_intvector);
 
   comm_close();
+  log_close();
 
   bios_exit();
 }

@@ -15,11 +15,10 @@ void mode_change();
 
 void clear_keycursor();
 void print_keycursor();
-void make_keyboard();
+void init_keyboard();
 int keyboard_get_key();
 void keyboard_change_string(char * string);
 int keyboard_get_y1234map(int y);
-void init_function_key();
 char * get_function_key(int n);
 
 #endif /* _WWTERM_KEYBOARD_H_ */

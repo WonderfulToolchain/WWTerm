@@ -9,11 +9,7 @@ static int log_flag = 0;
 
 int is_log_on() { return (log_flag); }
 
-#ifndef _WONX_
 static FILE far * fp;
-#else
-static FILE * fp;
-#endif
 
 char * log_switch()
 {
@@ -24,18 +20,26 @@ char * log_switch()
     fclose(fp);
     strcpy(buffer, "logfile open");
   } else {
-    while (1) {
+    while (1) { /* ファイルが存在する場合はスキップする */
       sprintf(buffer, LOG_FILE, file_number);
-      fp = fopen(buffer, "rb"); /* ファイルが存在する場合はスキップする */
+      fp = fopen(buffer, FOPEN_FOR_RB);
       if (fp == NULL) break;
       fclose(fp);
       file_number++;
     }
-    fp = fopen(buffer, "wb");
+    fp = fopen(buffer, FOPEN_FOR_WB);
     strcat(buffer, " close");
   }
   log_flag = !log_flag;
   return (buffer);
+}
+
+void log_close()
+{
+  if (log_flag) {
+    fflush(fp);
+    fclose(fp);
+  }
 }
 
 void log_putc(int c)

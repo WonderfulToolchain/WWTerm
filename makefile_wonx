@@ -8,21 +8,30 @@ OBJS = terminal.o termlib.o lib.o keyboard.o keymap.o com.o screen.o escape.o es
 #.SUFFIXES: .c .obj
 .SUFFIXES: .c .o
 
-#terminal.fx :	terminal.bin
+#all :		terminal.fx wwtfunc.fx
+all :		terminal
+
+#terminal.fx :	terminal.bin .doscmdrc
 #	doscmd mkfent16 D:\\terminal.cf
 
-#terminal.bin :	$(OBJS)
+#terminal.bin :	$(OBJS) .doscmdrc
 #	echo $(OBJS_FULL) > objs
 #	doscmd lcc86 -O -o D:\\terminal.bin @D:\\objs
 
 terminal :	$(OBJS)
 	$(CC) -g -Wall -o terminal $(OBJS) -L. -L/usr/local/lib -L/usr/X11R6/lib -lwonx -lX11 -lXt
 
-#.c.obj :	$*.c
+#.c.obj :	$*.c .doscmdrc
 #	doscmd lcc86 -c D:\\$*.c -O -I.
 
 .c.o :		$*.c
 	$(CC) -c $*.c -g -Wall -I. -I/usr/local/include
+
+#wwtfunc.fx :	wwtfunc .doscmdrc
+#	doscmd mkfent16 D:\\wwtfunc.cf
+
+#.doscmdrc :	doscmdrc
+#	cp doscmdrc .doscmdrc
 
 wonx :
 	mkdir -p wonx-2.2
@@ -31,14 +40,18 @@ wonx :
 	cd wonx-2.2 ; challsrc.sh *.[ch] ; $(MAKE)
 
 clean :
-#	rm -f terminal.fx terminal.bin *.obj $(PKGNAME).zip
-	rm -f terminal *.o $(PKGNAME).zip
+#	rm -f terminal.fx terminal.bin README.sjis wwtfunc.fx \
+#		*.obj .doscmdrc $(PKGNAME).zip
+	rm -f terminal *.o
 
-package :	terminal.bin terminal.fx
+README.sjis :	README
+	cat README | qkc -s -m > README.sjis
+
+package :	all README.sjis
 	mkdir -p $(PKGNAME)
 	rm -fR $(PKGNAME)/*
 	cp COPYING COPYRIGHT OMAKE.jpn README README.sjis \
-		makefile makefile_wonx \
+		makefile makefile_wonx wwtfunc doscmdrc \
 		*.h *.c *.bin *.cf *.fx $(PKGNAME)
 	zip -r wwterm $(PKGNAME)
 	mv wwterm.zip $(PKGNAME).zip

@@ -5,6 +5,7 @@
 
 int is_log_on();
 char * log_switch();
+void log_close();
 void log_putc(int c);
 void log_puts(char * s);
 void log_putb(void * p, int len);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 #include "types.h"
@@ -6,6 +7,7 @@
 #include "screen.h"
 #include "lib.h"
 
+static void make_keyboard();
 static void get_keymap();
 static char * get_symbol();
 static char * get_string();
@@ -155,7 +157,7 @@ void print_keycursor()
   wonx_lcddraw_level_up();
 }
 
-void make_keyboard()
+static void make_keyboard()
 {
   int key, i;
   char * string;
@@ -188,6 +190,71 @@ void make_keyboard()
 
   get_keymap();
   print_keycursor();
+}
+
+static void init_function_key()
+{
+  int i, c, s;
+  int func;
+  static char buffer[FUNCTION_KEY_BUFSIZE];
+  char last;
+  FILE far * fp;
+
+  for (func = 0; func < FUNCTION_KEY_NUMBER; func++) {
+    function_key[func] = default_function_key[func];
+  }
+
+  fp = fopen(FUNCTION_KEY_FILE, FOPEN_FOR_RT);
+  if (fp) {
+    func = 0;
+    i = 0;
+    s = 0;
+    last = '\0';
+
+    while ((c = fgetc(fp)) != EOF) {
+
+      if (last == '\\') {
+	last = '\0';
+	switch (c) {
+	case '\\':           break;
+	case 'n' : c = '\n'; break;
+	case '\r':
+	case '\n': last = c; continue;
+	default: break;
+	}
+      } else if (c == '\\') {
+	last = c;
+	continue;
+      } else if ((c == '\n') || (c == '\r')) {
+	if (((c == '\n') && (last == '\r')) ||
+	    ((c == '\r') && (last == '\n'))) {
+	  last = '\0';
+	  continue;
+	}
+	if (i < FUNCTION_KEY_BUFSIZE) {
+	  buffer[i++] = '\0';
+	  if (buffer[s] != '\0')
+	    function_key[func] = &(buffer[s]);
+	  func++;
+	  if (func > FUNCTION_KEY_NUMBER - 1)
+	    break;
+	  s = i;
+	}
+	last = c;
+	continue;
+      }
+
+      if (i < FUNCTION_KEY_BUFSIZE)
+	buffer[i++] = c;
+    }
+    fclose(fp);
+  }
+}
+
+void init_keyboard()
+{
+  init_function_key();
+  make_keyboard();
 }
 
 int keyboard_get_key()
@@ -237,14 +304,6 @@ void keyboard_change_string(char * string)
 int keyboard_get_y1234map(int y)
 {
   return (y1234map[keyboard_mode][y]);
-}
-
-void init_function_key()
-{
-  int i;
-  for (i = 0; i < FUNCTION_KEY_NUMBER; i++) {
-    function_key[i] = default_function_key[i];
-  }
 }
 
 char * get_function_key(int n)

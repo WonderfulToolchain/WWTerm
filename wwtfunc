@@ -1,0 +1,10 @@
+ls 
+cd 
+cd ..\n
+cat 
+pwd\n
+eval `resize`\n
+TERM=vt100 ; export TERM\n
+setenv TERM vt100\n
+exit\n
+logout\n

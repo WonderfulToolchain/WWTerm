@@ -83,16 +83,9 @@ int y1234map[KEYBOARD_MODE_NUM][4] = {
 };
 
 char * default_function_key[FUNCTION_KEY_NUMBER] = {
-  "ls \0\0\0\0\0\0\0\0\0\0\0\0\0", /* F1 */
-  "cd \0\0\0\0\0\0\0\0\0\0\0\0\0", /* F2 */
-  "cat \0\0\0\0\0\0\0\0\0\0\0\0", /* F3 */
-  "eval `resize`\n\0\0", /* F4 */
-  "pwd\n\0\0\0\0\0\0\0\0\0\0\0\0", /* F5 */
-  "more \0\0\0\0\0\0\0\0\0\0\0", /* F6 */
-  "less \0\0\0\0\0\0\0\0\0\0\0", /* F7 */
-  "vi \0\0\0\0\0\0\0\0\0\0\0\0\0", /* F8 */
-  "emacs \0\0\0\0\0\0\0\0\0\0", /* F9 */
-  "mnews -m\n\0\0\0\0\0\0\0", /* F10 */
+  FUNCTION_KEY_F1, FUNCTION_KEY_F2, FUNCTION_KEY_F3, FUNCTION_KEY_F4,
+  FUNCTION_KEY_F5, FUNCTION_KEY_F6, FUNCTION_KEY_F7, FUNCTION_KEY_F8,
+  FUNCTION_KEY_F9, FUNCTION_KEY_F10
 };
 
 /* End of Program  */
