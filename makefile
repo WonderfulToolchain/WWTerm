@@ -1,5 +1,5 @@
-VERSION = WWTerm-b05
-PKGNAME = wwterm-b05
+VERSION = WWTerm-b06
+PKGNAME = wwterm-b06
 
 OBJS = terminal.obj termlib.obj lib.obj keyboard.obj keymap.obj com.obj screen.obj escape.obj esclib.obj
 OBJS_FULL = D:\\terminal.obj D:\\termlib.obj D:\\lib.obj D:\\keyboard.obj D:\\keymap.obj D:\\com.obj D:\\screen.obj D:\\escape.obj D:\\esclib.obj
@@ -22,6 +22,6 @@ clean :
 package :	terminal.bin terminal.fx
 	mkdir -p $(PKGNAME)
 	rm -fR $(PKGNAME)/*
-	cp COPYING COPYRIGHT OMAKE.jpn makefile \
+	cp COPYING COPYRIGHT OMAKE.jpn README README.sjis makefile \
 		*.h *.c *.bin *.cf *.fx $(PKGNAME)
 	zip -r $(PKGNAME) $(PKGNAME)
