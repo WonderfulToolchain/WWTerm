@@ -8,6 +8,7 @@
 #include "keymap.h"
 #include "screen.h"
 #include "escape.h"
+#include "esclib.h"
 
 int key_X1234_action(int key)
 {
@@ -36,7 +37,6 @@ int key_Y1234_action(int key)
       comm_send_char('A');
     } else {
       cursol_up(1);
-      refresh();
     }
   }
   if (key & KEY_Y3) { /* Down */
@@ -46,7 +46,6 @@ int key_Y1234_action(int key)
       comm_send_char('B');
     } else {
       cursol_down(1);
-      refresh();
     }
   }
   if (key & KEY_Y2) { /* Right */
@@ -56,7 +55,6 @@ int key_Y1234_action(int key)
       comm_send_char('C');
     } else {
       cursol_right(1);
-      refresh();
     }
   }
   if (key & KEY_Y4) { /* Left */
@@ -66,7 +64,6 @@ int key_Y1234_action(int key)
       comm_send_char('D');
     } else {
       cursol_left(1);
-      refresh();
     }
   }
   return (0);
@@ -97,9 +94,13 @@ int key_A_action(int key)
     ch = '\0';
     break;
   case KEY_CLEAR_SCREEN:
-    cursol_x = 0;
-    cursol_y = 0;
+    cursol_set(0, 0);
     screen_clear();
+    refresh();
+    ch = '\0';
+    break;
+  case KEY_SEND_RESIZE:
+    send_resize();
     refresh();
     ch = '\0';
     break;

@@ -1,5 +1,5 @@
-VERSION = WWTerm-b04
-PKGNAME = wwterm-b04
+VERSION = WWTerm-b05
+PKGNAME = wwterm-b05
 
 OBJS = terminal.obj termlib.obj lib.obj keyboard.obj keymap.obj com.obj screen.obj escape.obj esclib.obj
 OBJS_FULL = D:\\terminal.obj D:\\termlib.obj D:\\lib.obj D:\\keyboard.obj D:\\keymap.obj D:\\com.obj D:\\screen.obj D:\\escape.obj D:\\esclib.obj

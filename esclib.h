@@ -7,6 +7,7 @@ void escape_send_stat(char command);
 void escape_screen_clear(char command);
 void escape_line_clear(char command);
 void escape_ins_del(char command, int parameter);
+void send_resize();
 
 #endif /* _WWTERM_ESCLIB_H_ */
 

@@ -41,55 +41,47 @@ void parse_escseq()
   case 'A': /* ESC[A カーソルを上に移動 */
     if (tmp1 < 0) tmp1 = 1;
     cursol_up(tmp1);
-    refresh();
     break;
 
   case 'B': /* ESC[B カーソルを下に移動 */
   case 'e': /* ESC[e カーソルを下に移動 */
     if (tmp1 < 0) tmp1 = 1;
     cursol_down(tmp1);
-    refresh();
     break;
 
   case 'C': /* ESC[C カーソルを右に移動 */
   case 'a': /* ESC[a カーソルを右に移動 */
     if (tmp1 < 0) tmp1 = 1;
     cursol_right(tmp1);
-    refresh();
     break;
 
   case 'D': /* ESC[D カーソルを左に移動 */
     if (tmp1 < 0) tmp1 = 1;
     cursol_left(tmp1);
-    refresh();
     break;
 
   case 'G': /* ESC[G カーソルのx座標を設定 */
     tmp1--;
     if (tmp1 < 0) tmp1 = 0;
     cursol_set_x(tmp1);
-    refresh();
     break;
 
   case 'd': /* ESC[d カーソルのy座標を設定 */
     tmp1--;
     if (tmp1 < 0) tmp1 = 0;
     cursol_set_y(tmp1);
-    refresh();
     break;
 
   case 'E': /* ESC[E カーソルをpar1行下の先頭に移動する */
     if (tmp1 < 0) tmp1 = 1;
     cursol_down(tmp1);
     cursol_set_x(0);
-    refresh();
     break;
 
   case 'F': /* ESC[F カーソルをpar1行上の先頭に移動する */
     if (tmp1 < 0) tmp1 = 1;
     cursol_up(tmp1);
     cursol_set_x(0);
-    refresh();
     break;
 
   case 'H': /* ESC[<row>;<col>H カーソルを指定した座標に移動 */
@@ -98,7 +90,6 @@ void parse_escseq()
     if (tmp1 < 0) tmp1 = 0;
     if (tmp2 < 0) tmp2 = 0;
     cursol_set(tmp2, tmp1);
-    refresh();
     break;
 
   case 'J': /* ESC[J クリア */

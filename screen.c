@@ -13,28 +13,67 @@ char screen[HEIGHT][WIDTH];
 int cursol_x = 0;
 int cursol_y = 0;
 
+void refresh(void)
+{
+  int y;
+
+  for (y = 0; y < HEIGHT; y++) {
+    text_put_substring(0, y, screen[y], WIDTH);
+  }
+}
+
+static void cursol_check()
+{
+  int i;
+
+  while (cursol_x < 0) {
+    cursol_x += WIDTH;
+    cursol_y--;
+  }
+
+  while (cursol_x > WIDTH - 1) {
+    cursol_x -= WIDTH;
+    cursol_y++;
+  }
+
+  if (cursol_y < 0) cursol_y = 0;
+
+  if (cursol_y >= HEIGHT) {
+    while (cursol_y >= HEIGHT) {
+      for (i = 0; i < HEIGHT - 1; i++) {
+	memcpy(screen[i], screen[i + 1], sizeof(screen[0][0]) * WIDTH);
+      }
+      line_clear(i);
+      cursol_y--;
+    }
+    refresh();
+  }
+
+  cursor_set_location(cursol_x, cursol_y, 1, 1);
+}
+
 void cursol_up(int add)
 {
   cursol_y -= add;
-  if (cursol_y < 0) cursol_y = 0;
+  cursol_check();
 }
 
 void cursol_down(int add)
 {
   cursol_y += add;
-  if (cursol_y > HEIGHT - 1) cursol_y = HEIGHT - 1;
+  cursol_check();
 }
 
 void cursol_left(int add)
 {
   cursol_x -= add;
-  if (cursol_x < 0) cursol_x = 0;
+  cursol_check();
 }
 
 void cursol_right(int add)
 {
   cursol_x += add;
-  if (cursol_x > WIDTH - 1) cursol_x = WIDTH - 1;
+  cursol_check();
 }
 
 void cursol_set_x(int x)
@@ -42,6 +81,7 @@ void cursol_set_x(int x)
   if (x < 0         ) x = 0;
   if (x > WIDTH  - 1) x = WIDTH  - 1;
   cursol_x = x;
+  cursol_check();
 }
 
 void cursol_set_y(int y)
@@ -49,6 +89,7 @@ void cursol_set_y(int y)
   if (y < 0         ) y = 0;
   if (y > HEIGHT - 1) y = HEIGHT - 1;
   cursol_y = y;
+  cursol_check();
 }
 
 void cursol_set(int x, int y)
@@ -112,25 +153,9 @@ void print_com_connect()
   text_put_string(26, KEYBOARD_Y + KEYBOARD_HEIGHT + 1, s);
 }
 
-void refresh(void)
-{
-  int y;
-
-  for (y = 0; y < HEIGHT; y++) {
-    text_put_substring(0, y, screen[y], WIDTH);
-  }
-
-#if 0
-  text_put_char(cursol_x, cursol_y, '_');
-#else
-  cursor_set_location(cursol_x, cursol_y, 1, 1);
-#endif
-}
-
 /* ターミナルスクリーンへの文字表示 */
 void print_character(char c)
 {
-  int i;
   static char last = '\0'; /* \r\n を \n にするため */
 
   /* エスケープシーケンスの処理 */
@@ -152,49 +177,23 @@ void print_character(char c)
     return;
   } else if (c == '\r') {
     if (last == '\n') { return; } /* \n\r を \n にする */
-    cursol_x = 0;
-    cursol_y++;
+    cursol_set_x(0);
+    cursol_down(1);
   } else if (c == '\n') {
     if (last == '\r') { return; } /* \r\n を \r にする */
-    cursol_x = 0;
-    cursol_y++;
+    cursol_set_x(0);
+    cursol_down(1);
   } else if (c == 0x08) { /* バックスペース */
-    cursol_x--;
-    if (cursol_x < 0) {
-      cursol_x = WIDTH - 1;
-      cursol_y--;
-    }
-  } else if ( (0x20 <= c) && (c <= 0x7f) ) {
+    cursol_left(1);
+  } else if (c == 0x7f) { /* DEL */
+    /* とりあえず，なにもしない */
+  } else if ( (0x20 <= c) && (c <= 0x7e) ) {
     text_put_char(cursol_x, cursol_y, c);
     screen[cursol_y][cursol_x] = c;
-
-    cursol_x++;
-    if (cursol_x > WIDTH - 1) {
-      cursol_x = 0;
-      cursol_y++;
-    }
-  } else {
-    last = c;
-    return;
+    cursol_right(1);
   }
 
   last = c;
-
-  while (cursol_y >= HEIGHT) {
-    for (i = 0; i < HEIGHT - 1; i++) {
-      memcpy(screen[i], screen[i + 1], sizeof(screen[0][0]) * WIDTH);
-    }
-    line_clear(i);
-    cursol_y--;
-
-    refresh();
-  }
-
-#if 0
-  text_put_char(cursol_x, cursol_y, '_');
-#else
-  cursor_set_location(cursol_x, cursol_y, 1, 1);
-#endif
 }
 
 /* End of Program  */

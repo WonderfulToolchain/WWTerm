@@ -6,6 +6,7 @@
 #define KEY_COM_CONNECT  (-1)
 #define KEY_COM_SPEED    (-2)
 #define KEY_CLEAR_SCREEN (-3)
+#define KEY_SEND_RESIZE  (-4)
 
 #define KEY_STRING_MAX_LENGTH 10
 

@@ -26,6 +26,8 @@ void com_unpause()
 
 void com_flush()
 {
+  if (com_receive_start == com_receive_end) return;
+
 #ifdef COM_PAUSE_IN_PRINTING
   com_pause();
 #endif
