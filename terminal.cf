@@ -1,5 +1,5 @@
 name: terminal
 info: Terminal
 mode: 7
-source: programs\terminal\term-b03\terminal.bin
-output: programs\terminal\term-b03\terminal.fx
+source: programs\terminal\term-b04\terminal.bin
+output: programs\terminal\term-b04\terminal.fx
