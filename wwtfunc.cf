@@ -1,5 +1,5 @@
 name: wwtfunc
 info: WWTFunc
 mode: rw
-source: programs\terminal\wwtrm100\wwtfunc
-output: programs\terminal\wwtrm100\wwtfunc.fx
+source: wwtfunc
+output: wwtfunc.fx

@@ -26,6 +26,7 @@
 #include <sys/key.h>
 #include <sys/comm.h>
 #include <sys/system.h>
+#include <sys/bios.h>
 
 #include "types.h"
 #include "lib.h"
@@ -142,10 +143,10 @@ int main()
 
   key_intvector.callback = (void (near *)())FP_OFF(key_handler);
   com_intvector.callback = (void (near *)())FP_OFF(com_handler);
-#if 0
-  key_intvector.cs = FP_SEG(com_handler);
+#ifdef __WONDERFUL__
+  key_intvector.cs = _CS;
   key_intvector.ds = FP_SEG(&com_receive_start);
-  com_intvector.cs = FP_SEG(com_handler);
+  com_intvector.cs = _CS;
   com_intvector.ds = FP_SEG(&com_receive_start);
 #else
   key_intvector.cs = _asm_inline("\tmov\tax,cs");

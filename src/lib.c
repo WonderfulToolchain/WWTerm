@@ -1,4 +1,5 @@
 #include <sys/key.h>
+#include <sys/bios.h>
 #include "types.h"
 #include "lib.h"
 
